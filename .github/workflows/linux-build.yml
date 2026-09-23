@@ -1,0 +1,42 @@
+---
+name: Linux Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-22.04
+    env:
+      # Keep toolchain and dependency versions explicit for reproducible CI.
+      BASE: /tmp
+      LLVM_VERSION: 16
+      SOLVERS: Z3
+      UCLIBC_VERSION: klee_uclibc_v1.4
+      ENABLE_OPTIMIZED: 1
+      ENABLE_DEBUG: 1
+      DISABLE_ASSERTIONS: 0
+      REQUIRES_RTTI: 0
+      COVERAGE: 0
+      ENABLE_DOXYGEN: 0
+      KLEE_RUNTIME_BUILD: Debug+Asserts
+      USE_TCMALLOC: 0
+      USE_LIBCXX: 0
+      GTEST_VERSION: 1.16.0
+      Z3_VERSION: 4.8.15
+      SQLITE_VERSION: 3400100
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Build KLEE
+        run: scripts/build/build.sh --install-system-deps klee --debug
+
+      - name: Run unit and system tests
+        run: scripts/build/run-tests.sh /tmp/klee_build* --debug
